@@ -6,7 +6,6 @@ import CryptoJS from "crypto-js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-console.log('yeahhhhhhhh');
 
 const loginUser = async (req: Request, res: Response) => {
     try {
