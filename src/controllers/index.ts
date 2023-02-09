@@ -9,7 +9,7 @@ import { generateOTP } from "../utils/otp";
 import { sendOtp } from "../services/authService";
 dotenv.config();
 
-let otpOfUser = { 
+let otpOfUser = {
     temp: ""
 };
 
@@ -35,21 +35,21 @@ const loginUser = async (req: Request, res: Response) => {
 
             await sendOtp(mobile, otpString);
 
-            let res = unirest('POST', 
-            `https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey=${process.env.sms_gateway_key}&senderid=DRMSRD&channel=OTP&DCS=0&flashsms=0&number=91${mobile}&text=Hello,${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!&route=1`)
+            let sendResponse = unirest('POST',
+                `https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey=${process.env.sms_gateway_key}&senderid=DRMSRD&channel=OTP&DCS=0&flashsms=0&number=91${mobile}&text=Hello,${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!&route=1`)
                 .headers({
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Cookie': 'PHPSESSID=61vmra84rl52hhk099p4fpl156'
-                }) 
+                })
                 // .send(`apiKey=${process.env.sms_gateway_key}`)
                 .send(`template=1207162377088337176`)
                 // .send(`message=Hello, ${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!`)
                 // .send(`numbers=${mobile}`)
                 // .send('test=false')
                 // .send('sender=DRMSRD')
-                .end(function (res: any) {
-                    if (res.error) throw new Error(res.error);
-                    return res.raw_body;
+                .end(function (sendResponse: any) {
+                    if (sendResponse.error) throw new Error(sendResponse.error);
+                    return sendResponse.raw_body;
                 });
 
             return res.send({ message: "OTP sent successfully!" });
@@ -64,17 +64,17 @@ const otpVerify = async (req: Request, res: Response) => {
     try {
         const receivedOtp = req.params.otp;
         console.log('params received otp', receivedOtp);
-        
+
         console.log('otpofuser.temp', otpOfUser.temp);
-        
-        if( receivedOtp !== otpOfUser.temp ){
+
+        if (receivedOtp !== otpOfUser.temp) {
             res.status(500).send("Otp is not valid!")
         }
         else {
+            console.log("SUCCESS. YOU're GREAT👍🔥");
             res.send('login successful...');
         }
-        
-        
+
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error });

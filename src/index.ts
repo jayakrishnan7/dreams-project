@@ -10,7 +10,7 @@ dotenv.config()
 
 const app = express();
 
-const PORT = 4001;
+const PORT = process.env.PORT || 5000;
 
 //parse json bodies..............
 app.use(express.urlencoded({ extended: true }));
@@ -22,3 +22,4 @@ app.use('/', router);
 app.listen(PORT, (): void => {
     console.log(`Server is running on ${PORT}`);
 })
+    

@@ -5,15 +5,15 @@ const router = express.Router();
 
 router.post("/signup", createUser);
 
+router.post("/login", loginUser)
+
+router.get("/otpVerification/:otp", otpVerify)
+
 router.put("/updateUser", updateUser);
 
 router.delete("/deleteUser/:id", deleteUser);
 
 router.get("/:id", getUser);
-
-router.post("/login", loginUser)
-
-router.get("/otpVerification/:otp", otpVerify)
 
 router.get("/", allUsers);
 
