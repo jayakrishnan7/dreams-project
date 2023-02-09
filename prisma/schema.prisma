@@ -20,3 +20,13 @@ model User {
   updatedAt DateTime @default(now()) @updatedAt
 }
 
+
+model otp {
+  id                    String             @id @default(auto()) @map("_id") @db.ObjectId
+  mobile                Int
+  otp                   String
+  verified              Boolean
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @default(now()) @updatedAt
+}
+

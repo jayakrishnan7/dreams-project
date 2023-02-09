@@ -1,51 +1,16 @@
-// export const generateOTP = (): any => {
-//   var val = Math.floor(1000 + Math.random() * 9000);
-//   console.log(val);
-//   return val
-// };
-
-////////////////////////////////////////////////////////////////////////////////////////
-
-
-// public getOtp = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ): Promise<void> => {
-//   try {
-//     const otpString = generateOTP();
-//     const mobile = req.params.mobile;
-//     const otp = await this.authService.sendOtp(mobile, otpString);
-//     var Response = unirest('POST', `https://api.textlocal.in/send/`)
-//       .headers({
+// let res = unirest('POST', 
+// `https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey=${process.env.sms_gateway_key}&senderid=DRMSRD&channel=OTP&DCS=0&flashsms=0&number=91${mobile}&text=Hello,${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!&route=1`)
+//     .headers({
 //         'Content-Type': 'application/x-www-form-urlencoded',
 //         'Cookie': 'PHPSESSID=61vmra84rl52hhk099p4fpl156'
-//       })
-//       .send(`apiKey=${process.env.sms_gateway_key}`)
-//       .send(`message=Welcome to GOLA. Your OTP for mobile verification is ${otpString}, Thanks GOLA.`)
-//       .send(`numbers=${mobile}`)
-//       .send('test=false')
-//       .send('sender=GOLAIN')
-//       .end(function (res) {
+//     }) 
+//     // .send(`apiKey=${process.env.sms_gateway_key}`)
+//     .send(`template=1207162377088337176`)
+//     // .send(`message=Hello, ${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!`)
+//     // .send(`numbers=${mobile}`)
+//     // .send('test=false')
+//     // .send('sender=DRMSRD')
+//     .end(function (res: any) {
 //         if (res.error) throw new Error(res.error);
 //         return res.raw_body;
-//       });
-//     res.status(200).json({ message: 'OTP sent!' });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-////////////////////////////////////////////////////////////////////////////////////////
-
-
-// public async sendOtp(mobile: string, otpString: string): Promise<any> {
-//   await prisma.otp.create({
-//     data: {
-//       mobile: mobile,
-//       otp: otpString.toString(),
-//       verified: false,
-//     },
-//   });
-//   return true;
-// }
+//     });

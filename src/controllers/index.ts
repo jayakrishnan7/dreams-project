@@ -1,69 +1,86 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-const { user } = new PrismaClient();
+const { user, otp } = new PrismaClient();
 
+const unirest = require('unirest');
 import CryptoJS from "crypto-js";
 import * as dotenv from "dotenv";
+import { generateOTP } from "../utils/otp";
+import { sendOtp } from "../services/authService";
 dotenv.config();
 
+let otpOfUser = { 
+    temp: ""
+};
 
 const loginUser = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
-        // console.log('wwwwwwwww', email, password);
+        const { mobile } = req.body;
 
-        if (email == undefined || password == undefined) {
+        if (!mobile) {
             res.status(500).send({ error: "Authentication failed..!!" });
         }
 
         const checkUser = await user.findFirst({
-            where: {
-                email,
-            },
+            where: { mobile },
         });
 
-        if (checkUser == null) {
-            res.send("No records found!!");
-        } else if (checkUser) {
-            const dbPassword = checkUser.password;
+        if (!checkUser) {
+            res.send("No records found with this number!");
+        }
+        else {
+            const otpString = generateOTP().toString();
 
-            // console.log('db hashed password', dbPassword);
-            // console.log('postmanSendingPassword', password);
+            otpOfUser.temp = otpString;
 
-            const keysec = process.env.ENCRYPTION_KEY as string;
+            await sendOtp(mobile, otpString);
 
-            var bytes = CryptoJS.AES.decrypt(dbPassword, keysec);
-
-            var originalText = bytes.toString(CryptoJS.enc.Utf8);
-
-            // console.log('rrrrrrr', originalText);
-
-            if (originalText == password) {
-                let accessToken = await getAccessToken({
-                    email: email,
-                    userId: checkUser!.id,
+            let res = unirest('POST', 
+            `https://www.smsgatewayhub.com/api/mt/SendSMS?APIKey=${process.env.sms_gateway_key}&senderid=DRMSRD&channel=OTP&DCS=0&flashsms=0&number=91${mobile}&text=Hello,${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!&route=1`)
+                .headers({
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Cookie': 'PHPSESSID=61vmra84rl52hhk099p4fpl156'
+                }) 
+                // .send(`apiKey=${process.env.sms_gateway_key}`)
+                .send(`template=1207162377088337176`)
+                // .send(`message=Hello, ${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!`)
+                // .send(`numbers=${mobile}`)
+                // .send('test=false')
+                // .send('sender=DRMSRD')
+                .end(function (res: any) {
+                    if (res.error) throw new Error(res.error);
+                    return res.raw_body;
                 });
 
-                // console.log('aaaaaaaaaa', accessToken);
-
-                res.send({
-                    userId: checkUser!.id,
-                    message: "User logged in successfully",
-                    accessToken: accessToken,
-                });
-            } else {
-                console.log("Password authentication failed.");
-
-                res.status(500).send({ error: "Authentication failed!!" });
-            }
-        } else {
-            console.log("Invalid credentials. User not found!!");
+            return res.send({ message: "OTP sent successfully!" });
         }
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error });
     }
 };
+
+const otpVerify = async (req: Request, res: Response) => {
+    try {
+        const receivedOtp = req.params.otp;
+        console.log('params received otp', receivedOtp);
+        
+        console.log('otpofuser.temp', otpOfUser.temp);
+        
+        if( receivedOtp !== otpOfUser.temp ){
+            res.status(500).send("Otp is not valid!")
+        }
+        else {
+            res.send('login successful...');
+        }
+        
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error });
+    }
+}
+
 
 
 const createUser = async (req: Request, res: Response) => {
@@ -208,6 +225,7 @@ const getUser = async (req: Request, res: Response) => {
 export {
     allUsers,
     loginUser,
+    otpVerify,
     getUser,
     createUser,
     updateUser,
