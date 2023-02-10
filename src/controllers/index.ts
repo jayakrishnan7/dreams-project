@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-const { user } = new PrismaClient();
+const { user, otp } = new PrismaClient();
 
 const unirest = require('unirest');
 import CryptoJS from "crypto-js";
@@ -35,6 +35,8 @@ const loginUser = async (req: Request, res: Response) => {
 
             otpOfUser.temp = otpString;
             otpOfUser.mobile = mobile;
+
+
             await sendOtp(mobile, otpString);
 
             let sendResponse = unirest('POST',
@@ -67,23 +69,22 @@ const otpVerify = async (req: Request, res: Response) => {
         const receivedOtp = req.params.otp;
         const mobile = req.body.mobile;
 
-        if(mobile !== otpOfUser.mobile) {
-            throw new Error ("mobile number verification failed!!")
-        }
+        const storedOtp = await otp.findFirst({
+            where: { mobile, otp: receivedOtp },
+          });
 
-        console.log('params received otp', receivedOtp);
-
-        console.log('otpofuser.temp', otpOfUser.temp);
-
-        if (receivedOtp !== otpOfUser.temp) {
+        if (!storedOtp) {
             res.status(500).send("Otp is not valid!")
         }
         else {
             console.log("LOGIN SUCCESS");
 
-            let accessToken = await getAccessToken({
-                mobile: otpOfUser.mobile
-            });
+            await otp.update({
+                where: { id: storedOtp.id },
+                data: { verified: true },
+              });
+
+            let accessToken = await getAccessToken({ mobile });
 
             // console.log('aaaaaaaaaa', accessToken);
 
