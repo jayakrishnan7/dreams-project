@@ -1,16 +1,18 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-const { user, otp } = new PrismaClient();
+const { user } = new PrismaClient();
 
 const unirest = require('unirest');
 import CryptoJS from "crypto-js";
 import * as dotenv from "dotenv";
 import { generateOTP } from "../utils/otp";
 import { sendOtp } from "../services/authService";
+import { getAccessToken } from "./jwt";
 dotenv.config();
 
 let otpOfUser = {
-    temp: ""
+    temp: "",
+    mobile: ""
 };
 
 const loginUser = async (req: Request, res: Response) => {
@@ -32,7 +34,7 @@ const loginUser = async (req: Request, res: Response) => {
             const otpString = generateOTP().toString();
 
             otpOfUser.temp = otpString;
-
+            otpOfUser.mobile = mobile;
             await sendOtp(mobile, otpString);
 
             let sendResponse = unirest('POST',
@@ -63,6 +65,12 @@ const loginUser = async (req: Request, res: Response) => {
 const otpVerify = async (req: Request, res: Response) => {
     try {
         const receivedOtp = req.params.otp;
+        const mobile = req.body.mobile;
+
+        if(mobile !== otpOfUser.mobile) {
+            throw new Error ("mobile number verification failed!!")
+        }
+
         console.log('params received otp', receivedOtp);
 
         console.log('otpofuser.temp', otpOfUser.temp);
@@ -71,8 +79,18 @@ const otpVerify = async (req: Request, res: Response) => {
             res.status(500).send("Otp is not valid!")
         }
         else {
-            console.log("SUCCESS. YOU're GREAT👍🔥");
-            res.send('login successful...');
+            console.log("LOGIN SUCCESS");
+
+            let accessToken = await getAccessToken({
+                mobile: otpOfUser.mobile
+            });
+
+            // console.log('aaaaaaaaaa', accessToken);
+
+            res.send({
+                message: "User logged in successfully",
+                accessToken
+            });
         }
 
     } catch (error) {
@@ -182,6 +200,9 @@ const deleteUser = async (req: Request, res: Response) => {
 
 const allUsers = async (req: Request, res: Response) => {
     try {
+        // const sessionObj = (req as any).sessionObj;
+        // console.log('sessionnnnnn in api allusers', sessionObj);
+
         const users = await user.findMany({
             select: {
                 first_name: true,
@@ -189,7 +210,7 @@ const allUsers = async (req: Request, res: Response) => {
                 mobile: true
             },
         });
-        console.log(users);
+        // console.log(users);
         res.send({ users });
 
     } catch (error) {
@@ -230,4 +251,5 @@ export {
     createUser,
     updateUser,
     deleteUser,
+    user
 };
