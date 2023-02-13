@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { user } from "../controllers/index";
+import { user } from "../controllers/user";
 
 const jwtSecretString: string = process.env.JWT_ACCESS_SECRET!;
 
@@ -39,8 +39,6 @@ export const validateToken = async (
   }
 };
 
-// import { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
-// import { request } from "http";
 
 export const getSessionInfo = async (
   req: any,
@@ -54,9 +52,8 @@ export const getSessionInfo = async (
       Buffer.from(token.split(".")[1], "base64").toString()
     );
 
-    // req.sessionObj =  decodedToken
+    // console.log(decodedToken);
 
-    console.log("deeeeeeeee", decodedToken);
     const mobile = decodedToken.mobile;
 
     const userDetails = await user.findFirst({
@@ -65,7 +62,7 @@ export const getSessionInfo = async (
       }
     })
 
-    console.log('detailsssssss', userDetails);
+    // console.log(userDetails);
 
     const data = {
       user_id: userDetails?.user_id,
@@ -78,11 +75,11 @@ export const getSessionInfo = async (
       isDeleted: userDetails?.isDeleted,
     }
 
-    console.log('filtered data from token', data);
+    // console.log('filtered data from token', data);
 
     req.sessionObj = data;
 
-    console.log('sessionnnnnn', req.sessionObj);
+    // console.log('sessionnnnnn', req.sessionObj);
     
     next();
   } catch (error) {

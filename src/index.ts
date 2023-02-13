@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
-
 import express from 'express';
-import { router } from './routes/router';
+import { userRouter } from './routes/userRouter';
+import { ownerRouter } from './routes/ownerRouter';
+// import { adminRouter } from './routes/adminRouter';
 
 // env configuration.............
 import * as dotenv from 'dotenv';
@@ -16,7 +15,9 @@ const PORT = process.env.PORT || 5000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use('/', router);
+// app.use('/admin', adminRouter);
+app.use('/owner', ownerRouter);
+app.use('/', userRouter);
 
 
 app.listen(PORT, (): void => {

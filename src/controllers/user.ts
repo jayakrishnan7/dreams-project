@@ -5,15 +5,13 @@ const { user, otp } = new PrismaClient();
 const unirest = require('unirest');
 import CryptoJS from "crypto-js";
 import * as dotenv from "dotenv";
+dotenv.config();
 import { generateOTP } from "../utils/otp";
 import { sendOtp } from "../services/authService";
 import { getAccessToken } from "./jwt";
-dotenv.config();
+import { createUserInput } from "../models/domain";
 
-let otpOfUser = {
-    temp: "",
-    mobile: ""
-};
+
 
 const loginUser = async (req: Request, res: Response) => {
     try {
@@ -32,10 +30,6 @@ const loginUser = async (req: Request, res: Response) => {
         }
         else {
             const otpString = generateOTP().toString();
-
-            otpOfUser.temp = otpString;
-            otpOfUser.mobile = mobile;
-
 
             await sendOtp(mobile, otpString);
 
@@ -63,6 +57,7 @@ const loginUser = async (req: Request, res: Response) => {
         res.status(500).json({ message: error });
     }
 };
+
 
 const otpVerify = async (req: Request, res: Response) => {
     try {
@@ -101,23 +96,15 @@ const otpVerify = async (req: Request, res: Response) => {
 }
 
 
-
 const createUser = async (req: Request, res: Response) => {
     try {
-        type createPersonInput = {
-            first_name: string;
-            last_name: string;
-            email: string;
-            mobile: number;
-            password: string;
-        };
         const {
             first_name,
             last_name,
             email,
             mobile,
             password
-        }: createPersonInput = req.body;
+        }: createUserInput = req.body;
 
         const userExists = await user.findFirst({
             where: { mobile },
@@ -242,6 +229,7 @@ const getUser = async (req: Request, res: Response) => {
         res.status(500).send({ message: error });
     }
 };
+
 
 
 export {
