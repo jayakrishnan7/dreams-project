@@ -18,7 +18,7 @@ const loginUser = async (req: Request, res: Response) => {
         const { mobile } = req.body;
 
         if (!mobile) {
-            res.status(500).send({ error: "Authentication failed..!!" });
+            res.status(401).send({ error: "Authentication failed..!!" });
         }
 
         const checkUser = await user.findFirst({
@@ -26,7 +26,7 @@ const loginUser = async (req: Request, res: Response) => {
         });
 
         if (!checkUser) {
-            res.send("No records found with this number!");
+            throw new Error("No records found with this number!");
         }
         else {
             const otpString = generateOTP().toString();
@@ -39,12 +39,7 @@ const loginUser = async (req: Request, res: Response) => {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Cookie': 'PHPSESSID=61vmra84rl52hhk099p4fpl156'
                 })
-                // .send(`apiKey=${process.env.sms_gateway_key}`)
                 .send(`template=1207162377088337176`)
-                // .send(`message=Hello, ${otpString} is OTP for registering on Dreamsredeveloped. Please do not share this OTP. Thanks!`)
-                // .send(`numbers=${mobile}`)
-                // .send('test=false')
-                // .send('sender=DRMSRD')
                 .end(function (sendResponse: any) {
                     if (sendResponse.error) throw new Error(sendResponse.error);
                     return sendResponse.raw_body;
@@ -54,7 +49,7 @@ const loginUser = async (req: Request, res: Response) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: error });
+        res.status(400).json({ message: error });
     }
 };
 
@@ -62,38 +57,57 @@ const loginUser = async (req: Request, res: Response) => {
 const otpVerify = async (req: Request, res: Response) => {
     try {
         const receivedOtp = req.params.otp;
-        const mobile = req.body.mobile;
+        const mobile = Number(req.params.mobile);
+        const maxOtpValidityMinutes = 10; // 10 minutes
 
         const storedOtp = await otp.findFirst({
-            where: { mobile, otp: receivedOtp },
-          });
+            where: {
+                mobile,
+                otp: receivedOtp
+            },
+        });
 
         if (!storedOtp) {
-            res.status(500).send("Otp is not valid!")
+            // res.status(400).send("Otp is not valid!")
+            throw new Error("Otp is not valid!")
         }
         else {
-            console.log("LOGIN SUCCESS");
 
-            await otp.update({
-                where: { id: storedOtp.id },
-                data: { verified: true },
-              });
+            const otpTimestamp = storedOtp.createdAt;
+            const currentTime = new Date();
+            const timeDifference = (currentTime.getTime() - otpTimestamp.getTime()) / 1000 / 60; // difference in minutes
+            // console.log('otpTimestamp', otpTimestamp);
+            // console.log('currentTime', currentTime);
+            // console.log('timediff', timeDifference);
+            
+            if (timeDifference > maxOtpValidityMinutes) {
+                res.status(400).send("Otp has expired! Please request a new one.");
+            } else {
 
-            let accessToken = await getAccessToken({ mobile });
+                console.log("LOGIN SUCCESS");
 
-            // console.log('aaaaaaaaaa', accessToken);
+                await otp.update({
+                    where: { id: storedOtp.id },
+                    data: { verified: true },
+                });
 
-            res.send({
-                message: "User logged in successfully",
-                accessToken
-            });
+                let accessToken = await getAccessToken({ mobile });
+
+                // console.log('aaaaaaaaaa', accessToken);
+
+                res.send({
+                    message: "User logged in successfully",
+                    accessToken
+                });
+            }
         }
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: error });
+        res.status(400).json({ message: error });
     }
 }
+
 
 
 const createUser = async (req: Request, res: Response) => {
@@ -144,7 +158,7 @@ const createUser = async (req: Request, res: Response) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).send({ message: error });
+        res.status(400).send({ message: error });
     }
 };
 
@@ -163,7 +177,7 @@ const updateUser = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(500).send("Updation failed!!");
+        res.status(400).send("Updation failed!!");
     }
 };
 
@@ -181,7 +195,7 @@ const deleteUser = async (req: Request, res: Response) => {
             message: `Deleted ${user_id} user successfully...`
         });
     } catch (error) {
-        res.status(500).send({ message: "User not exists", error });
+        res.status(400).send({ message: "User not exists", error });
     }
 };
 
@@ -203,7 +217,7 @@ const allUsers = async (req: Request, res: Response) => {
 
     } catch (error) {
         console.log(error);
-        res.status(500).send({ message: error });
+        res.status(400).send({ message: error });
     }
 };
 
@@ -226,7 +240,7 @@ const getUser = async (req: Request, res: Response) => {
 
     } catch (error) {
         console.log(error);
-        res.status(500).send({ message: error });
+        res.status(400).send({ message: error });
     }
 };
 

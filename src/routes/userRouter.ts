@@ -4,11 +4,11 @@ import { getSessionInfo, validateToken } from "../middlewares/auth";
 
 const userRouter = express.Router();
 
-userRouter.post("/signup", createUser);
-
 userRouter.post("/login", loginUser)
 
-userRouter.get("/otpVerification/:otp", otpVerify)
+userRouter.post("/signup", createUser);
+
+userRouter.get("/otpVerification/:otp/:mobile", otpVerify)
 
 userRouter.put("/updateUser", validateToken, getSessionInfo, updateUser);
 

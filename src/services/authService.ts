@@ -14,7 +14,8 @@ export const sendOtp = async (mobile: number, otpString: string): Promise<any> =
         mobile
       },
       data: {
-        otp: otpString
+        otp: otpString,
+        createdAt: new Date()
       }
     })
   }
