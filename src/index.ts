@@ -1,7 +1,5 @@
 import express from 'express';
 import { userRouter } from './routes/userRouter';
-import { ownerRouter } from './routes/ownerRouter';
-// import { adminRouter } from './routes/adminRouter';
 import morgan from 'morgan';
 
 // env configuration.............
@@ -18,8 +16,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// app.use('/admin', adminRouter); 
-app.use('/owner', ownerRouter);
+
 app.use('/', userRouter);
 
 
